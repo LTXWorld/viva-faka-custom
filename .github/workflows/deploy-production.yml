@@ -98,24 +98,30 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VMISS_SSH_KEY }}" > ~/.ssh/vmiss_deploy_key
           chmod 600 ~/.ssh/vmiss_deploy_key
-          ssh-keyscan -p "${{ secrets.VMISS_PORT || '22' }}" "${{ secrets.VMISS_HOST }}" >> ~/.ssh/known_hosts
+          HOST="$(printf '%s' "${{ secrets.VMISS_HOST }}" | tr -d '[:space:]')"
+          PORT="$(printf '%s' "${{ secrets.VMISS_PORT || '22' }}" | tr -d '[:space:]')"
+          ssh-keyscan -p "$PORT" "$HOST" >> ~/.ssh/known_hosts
 
       - name: Upload release binary
         id: upload
         run: |
           TS=$(date +%Y%m%d-%H%M%S)
           echo "ts=$TS" >> "$GITHUB_OUTPUT"
-          REMOTE="${{ secrets.VMISS_USER }}@${{ secrets.VMISS_HOST }}"
-          PORT="${{ secrets.VMISS_PORT || '22' }}"
-          DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/srv/faka' }}"
+          USER="$(printf '%s' "${{ secrets.VMISS_USER }}" | tr -d '[:space:]')"
+          HOST="$(printf '%s' "${{ secrets.VMISS_HOST }}" | tr -d '[:space:]')"
+          PORT="$(printf '%s' "${{ secrets.VMISS_PORT || '22' }}" | tr -d '[:space:]')"
+          DEPLOY_PATH="$(printf '%s' "${{ secrets.DEPLOY_PATH || '/srv/faka' }}" | tr -d '\r\n')"
+          REMOTE="$USER@$HOST"
           ssh -i ~/.ssh/vmiss_deploy_key -p "$PORT" "$REMOTE" "mkdir -p '$DEPLOY_PATH/releases' '$DEPLOY_PATH/backup'"
           scp -i ~/.ssh/vmiss_deploy_key -P "$PORT" dujiao-server "$REMOTE:$DEPLOY_PATH/releases/dujiao-server-$TS"
 
       - name: Deploy on server with backup and rollback
         run: |
-          REMOTE="${{ secrets.VMISS_USER }}@${{ secrets.VMISS_HOST }}"
-          PORT="${{ secrets.VMISS_PORT || '22' }}"
-          DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/srv/faka' }}"
+          USER="$(printf '%s' "${{ secrets.VMISS_USER }}" | tr -d '[:space:]')"
+          HOST="$(printf '%s' "${{ secrets.VMISS_HOST }}" | tr -d '[:space:]')"
+          PORT="$(printf '%s' "${{ secrets.VMISS_PORT || '22' }}" | tr -d '[:space:]')"
+          DEPLOY_PATH="$(printf '%s' "${{ secrets.DEPLOY_PATH || '/srv/faka' }}" | tr -d '\r\n')"
+          REMOTE="$USER@$HOST"
           TS="${{ steps.upload.outputs.ts }}"
           ssh -i ~/.ssh/vmiss_deploy_key -p "$PORT" "$REMOTE" "DEPLOY_PATH='$DEPLOY_PATH' TS='$TS' bash -s" <<'EOF'
           set -euo pipefail

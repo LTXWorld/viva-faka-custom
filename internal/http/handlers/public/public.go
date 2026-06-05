@@ -180,7 +180,8 @@ func (h *Handler) GetConfig(c *gin.Context) {
 	smtpSetting, _ := h.SettingService.GetSMTPSetting(h.Config.Email)
 	data["smtp_enabled"] = smtpSetting.Enabled
 	registrationEnabled, _ := h.SettingService.GetRegistrationEnabled(true)
-	emailVerificationEnabled, _ := h.SettingService.GetEmailVerificationEnabled(true)
+	// Viva 定制：注册不再要求邮箱验证码，避免未配置 SMTP 时无法注册。
+	emailVerificationEnabled := false
 	data["registration_enabled"] = registrationEnabled
 	data["email_verification_enabled"] = emailVerificationEnabled
 	emailDomainPolicy, policyErr := h.SettingService.GetRegistrationEmailDomainPolicy()

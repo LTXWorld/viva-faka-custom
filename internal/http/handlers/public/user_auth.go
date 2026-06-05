@@ -32,12 +32,8 @@ func (h *Handler) SendUserVerifyCode(c *gin.Context) {
 
 	purpose := strings.ToLower(strings.TrimSpace(req.Purpose))
 
-	// 检查邮箱验证开关（总开关）
-	emailVerificationEnabled, err := h.SettingService.GetEmailVerificationEnabled(true)
-	if err != nil {
-		shared.RespondError(c, response.CodeInternal, "error.send_verify_code_failed", err)
-		return
-	}
+	// Viva 定制：关闭邮箱验证码能力，注册改为邮箱 + 密码直接创建账号。
+	emailVerificationEnabled := false
 	if !emailVerificationEnabled {
 		shared.RespondError(c, response.CodeForbidden, "error.email_verification_disabled", nil)
 		return
@@ -138,12 +134,8 @@ func (h *Handler) UserRegister(c *gin.Context) {
 		return
 	}
 
-	// 检查邮箱验证开关
-	emailVerificationEnabled, err := h.SettingService.GetEmailVerificationEnabled(true)
-	if err != nil {
-		shared.RespondError(c, response.CodeInternal, "error.register_failed", err)
-		return
-	}
+	// Viva 定制：关闭注册邮箱验证码，允许邮箱 + 密码直接注册。
+	emailVerificationEnabled := false
 
 	user, token, expiresAt, err := h.UserAuthService.Register(req.Email, req.Password, req.Code, req.AgreementAccepted, emailVerificationEnabled)
 	if err != nil {
@@ -417,12 +409,8 @@ type UserResetPasswordRequest struct {
 
 // UserForgotPassword 忘记密码重置
 func (h *Handler) UserForgotPassword(c *gin.Context) {
-	// 邮箱验证关闭时，禁止密码重置，提示联系管理员
-	emailVerificationEnabled, err := h.SettingService.GetEmailVerificationEnabled(true)
-	if err != nil {
-		shared.RespondError(c, response.CodeInternal, "error.reset_failed", err)
-		return
-	}
+	// Viva 定制：邮箱验证码关闭时，禁止密码重置，提示联系管理员。
+	emailVerificationEnabled := false
 	if !emailVerificationEnabled {
 		shared.RespondError(c, response.CodeForbidden, "error.password_reset_disabled", nil)
 		return

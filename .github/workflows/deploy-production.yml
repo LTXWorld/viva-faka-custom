@@ -1,6 +1,9 @@
 name: Deploy Production
 
 on:
+  push:
+    branches:
+      - viva-custom
   workflow_dispatch:
     inputs:
       user_ref:
@@ -34,18 +37,29 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Resolve frontend refs
+        id: refs
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "user_ref=${{ inputs.user_ref }}" >> "$GITHUB_OUTPUT"
+            echo "admin_ref=${{ inputs.admin_ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "user_ref=viva-custom" >> "$GITHUB_OUTPUT"
+            echo "admin_ref=main" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout admin frontend
         uses: actions/checkout@v4
         with:
           repository: dujiao-next/admin
-          ref: ${{ inputs.admin_ref }}
+          ref: ${{ steps.refs.outputs.admin_ref }}
           path: admin-src
 
       - name: Checkout Viva user frontend
         uses: actions/checkout@v4
         with:
           repository: LTXWorld/viva-faka-user
-          ref: ${{ inputs.user_ref }}
+          ref: ${{ steps.refs.outputs.user_ref }}
           path: user-src
 
       - name: Setup Node.js
@@ -160,7 +174,11 @@ jobs:
       - name: Deployment summary
         run: |
           echo "### Viva production deploy complete" >> "$GITHUB_STEP_SUMMARY"
-          echo "- User frontend ref: ${{ inputs.user_ref }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Admin frontend ref: ${{ inputs.admin_ref }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Trigger: ${{ github.event_name }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- API/fullstack commit: ${{ github.sha }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- User frontend ref: ${{ steps.refs.outputs.user_ref }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Admin frontend ref: ${{ steps.refs.outputs.admin_ref }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Release timestamp: ${{ steps.upload.outputs.ts }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Note: ${{ inputs.deploy_note }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "- Note: ${{ inputs.deploy_note }}" >> "$GITHUB_STEP_SUMMARY"
+          fi

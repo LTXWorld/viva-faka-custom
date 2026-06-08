@@ -32,12 +32,8 @@ func (h *Handler) SendUserVerifyCode(c *gin.Context) {
 
 	purpose := strings.ToLower(strings.TrimSpace(req.Purpose))
 
-	// Viva 定制：关闭邮箱验证码能力，注册改为邮箱 + 密码直接创建账号。
-	emailVerificationEnabled := false
-	if !emailVerificationEnabled {
-		shared.RespondError(c, response.CodeForbidden, "error.email_verification_disabled", nil)
-		return
-	}
+	// Viva 定制：恢复验证码发送能力，但注册本身仍不强制邮箱验证码，避免未配置/不可用 SMTP 影响用户注册。
+	// 是否要求注册验证码由 UserRegister 中的 emailVerificationEnabled 控制。
 
 	// 当 purpose 为 register 时，检查注册是否开启
 	if purpose == constants.VerifyPurposeRegister {
@@ -409,13 +405,7 @@ type UserResetPasswordRequest struct {
 
 // UserForgotPassword 忘记密码重置
 func (h *Handler) UserForgotPassword(c *gin.Context) {
-	// Viva 定制：邮箱验证码关闭时，禁止密码重置，提示联系管理员。
-	emailVerificationEnabled := false
-	if !emailVerificationEnabled {
-		shared.RespondError(c, response.CodeForbidden, "error.password_reset_disabled", nil)
-		return
-	}
-
+	// Viva 定制：恢复邮箱验证码密码重置能力；未配置/未启用 SMTP 时由服务层返回明确错误。
 	var req UserResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.RespondBindError(c, err)

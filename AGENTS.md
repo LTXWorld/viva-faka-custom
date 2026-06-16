@@ -18,10 +18,11 @@ https://faka.bfsmlt.com
 服务器：
 
 ```text
-VMISS 香港 BGP
-IP: 38.47.108.70
-SSH: ssh vmiss
+服务器: LTGer（以本机 SSH 配置为准）
+SSH: ssh LTGer
 运行目录: /srv/faka
+入口: LTGer 上的反代入口转发到宿主机 dujiao-next:8080
+旧服务器: 154.64.230.197、38.47.108.70（迁移回滚备用，dujiao-next 应保持停止）
 ```
 
 当前业务：
@@ -65,12 +66,12 @@ viva-custom
 
 ## 3. 重要架构提醒
 
-Dujiao-Next fullstack release 由三部分组成：
+Dujiao-Next fullstack release 由三部分组成，Viva 当前都有 fork 定制仓库：
 
 ```text
-1. dujiao-next/dujiao-next  后端 API + fullstack embed 壳
-2. dujiao-next/user         前台用户端 SPA
-3. dujiao-next/admin        后台管理端 SPA
+1. LTXWorld/viva-faka-custom  后端 API + fullstack embed 壳
+2. LTXWorld/viva-faka-user    前台用户端 SPA
+3. LTXWorld/viva-faka-admin   后台管理端 SPA
 ```
 
 本仓库主要是后端 API 仓库。
@@ -85,9 +86,9 @@ Dujiao-Next fullstack release 由三部分组成：
 支付页
 ```
 
-通常需要修改 `dujiao-next/user` 前台仓库，而不是只改本仓库。
+通常需要修改 `viva-faka-user:viva-custom` 前台仓库，而不是只改本仓库。
 
-如果要改后台管理页面，通常需要修改 `dujiao-next/admin` 仓库。
+如果要改后台管理页面，通常需要修改 `viva-faka-admin:viva-custom` 后台仓库。
 
 ---
 
@@ -146,7 +147,7 @@ checkout.guestInstructions
 生产环境部署前必须：
 
 ```bash
-ssh vmiss "/usr/local/bin/faka-backup.sh"
+ssh LTGer "/usr/local/bin/faka-backup.sh"
 ```
 
 部署时不得覆盖：
@@ -166,7 +167,7 @@ ssh vmiss "/usr/local/bin/faka-backup.sh"
 部署后检查：
 
 ```bash
-ssh vmiss "systemctl is-active dujiao-next nginx redis-server"
+ssh LTGer "systemctl is-active dujiao-next nginx redis-server"
 curl -I https://faka.bfsmlt.com/
 ```
 

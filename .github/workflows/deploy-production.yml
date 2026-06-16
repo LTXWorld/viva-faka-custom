@@ -13,7 +13,7 @@ on:
       admin_ref:
         description: 'Admin repo ref to build'
         required: true
-        default: 'main'
+        default: 'viva-custom'
       deploy_note:
         description: 'Optional deployment note'
         required: false
@@ -45,13 +45,13 @@ jobs:
             echo "admin_ref=${{ inputs.admin_ref }}" >> "$GITHUB_OUTPUT"
           else
             echo "user_ref=viva-custom" >> "$GITHUB_OUTPUT"
-            echo "admin_ref=main" >> "$GITHUB_OUTPUT"
+            echo "admin_ref=viva-custom" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Checkout admin frontend
+      - name: Checkout Viva admin frontend
         uses: actions/checkout@v4
         with:
-          repository: dujiao-next/admin
+          repository: LTXWorld/viva-faka-admin
           ref: ${{ steps.refs.outputs.admin_ref }}
           path: admin-src
 
@@ -110,28 +110,28 @@ jobs:
       - name: Prepare SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.VMISS_SSH_KEY }}" > ~/.ssh/vmiss_deploy_key
-          chmod 600 ~/.ssh/vmiss_deploy_key
-          ssh-keyscan -p "${{ secrets.VMISS_PORT || '22' }}" "${{ secrets.VMISS_HOST }}" >> ~/.ssh/known_hosts
+          echo "${{ secrets.LTGER_SSH_KEY }}" > ~/.ssh/ltger_deploy_key
+          chmod 600 ~/.ssh/ltger_deploy_key
+          ssh-keyscan -p "${{ secrets.LTGER_PORT || '22' }}" "${{ secrets.LTGER_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Upload release binary
         id: upload
         run: |
           TS=$(date +%Y%m%d-%H%M%S)
           echo "ts=$TS" >> "$GITHUB_OUTPUT"
-          REMOTE="${{ secrets.VMISS_USER }}@${{ secrets.VMISS_HOST }}"
-          PORT="${{ secrets.VMISS_PORT || '22' }}"
+          REMOTE="${{ secrets.LTGER_USER }}@${{ secrets.LTGER_HOST }}"
+          PORT="${{ secrets.LTGER_PORT || '22' }}"
           DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/srv/faka' }}"
-          ssh -i ~/.ssh/vmiss_deploy_key -p "$PORT" "$REMOTE" "mkdir -p '$DEPLOY_PATH/releases' '$DEPLOY_PATH/backup'"
-          scp -i ~/.ssh/vmiss_deploy_key -P "$PORT" dujiao-server "$REMOTE:$DEPLOY_PATH/releases/dujiao-server-$TS"
+          ssh -i ~/.ssh/ltger_deploy_key -p "$PORT" "$REMOTE" "mkdir -p '$DEPLOY_PATH/releases' '$DEPLOY_PATH/backup'"
+          scp -i ~/.ssh/ltger_deploy_key -P "$PORT" dujiao-server "$REMOTE:$DEPLOY_PATH/releases/dujiao-server-$TS"
 
       - name: Deploy on server with backup and rollback
         run: |
-          REMOTE="${{ secrets.VMISS_USER }}@${{ secrets.VMISS_HOST }}"
-          PORT="${{ secrets.VMISS_PORT || '22' }}"
+          REMOTE="${{ secrets.LTGER_USER }}@${{ secrets.LTGER_HOST }}"
+          PORT="${{ secrets.LTGER_PORT || '22' }}"
           DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/srv/faka' }}"
           TS="${{ steps.upload.outputs.ts }}"
-          ssh -i ~/.ssh/vmiss_deploy_key -p "$PORT" "$REMOTE" "DEPLOY_PATH='$DEPLOY_PATH' TS='$TS' bash -s" <<'EOF'
+          ssh -i ~/.ssh/ltger_deploy_key -p "$PORT" "$REMOTE" "DEPLOY_PATH='$DEPLOY_PATH' TS='$TS' bash -s" <<'EOF'
           set -euo pipefail
 
           RELEASE="$DEPLOY_PATH/releases/dujiao-server-$TS"
@@ -179,6 +179,7 @@ jobs:
           echo "- User frontend ref: ${{ steps.refs.outputs.user_ref }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Admin frontend ref: ${{ steps.refs.outputs.admin_ref }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Release timestamp: ${{ steps.upload.outputs.ts }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Server: LTGer / ${{ secrets.LTGER_HOST }}" >> "$GITHUB_STEP_SUMMARY"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "- Note: ${{ inputs.deploy_note }}" >> "$GITHUB_STEP_SUMMARY"
           fi

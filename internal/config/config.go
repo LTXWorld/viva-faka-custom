@@ -29,6 +29,7 @@ type Config struct {
 	Email        EmailConfig        `mapstructure:"email"`
 	Order        OrderConfig        `mapstructure:"order"`
 	Captcha      CaptchaConfig      `mapstructure:"captcha"`
+	Lyxazy       LyxazyConfig       `mapstructure:"lyxazy"`
 	Web          WebConfig          `mapstructure:"web"`
 }
 
@@ -262,6 +263,12 @@ type PasswordPolicyConfig struct {
 	RequireSpecial bool `mapstructure:"require_special"`
 }
 
+// LyxazyConfig lyxazy 直充 API 配置。
+type LyxazyConfig struct {
+	BaseURL string `mapstructure:"base_url"`
+	APIKey  string `mapstructure:"api_key"`
+}
+
 // WebConfig 仅在 fullstack 二进制模式下生效。
 // 默认构建模式（无 -tags fullstack）下这些字段不被任何代码读取。
 type WebConfig struct {
@@ -386,6 +393,8 @@ func Load() *Config {
 	viper.SetDefault("captcha.turnstile.secret_key", "")
 	viper.SetDefault("captcha.turnstile.verify_url", "https://challenges.cloudflare.com/turnstile/v0/siteverify")
 	viper.SetDefault("captcha.turnstile.timeout_ms", 2000)
+	viper.SetDefault("lyxazy.base_url", "https://www.lyxazy.top/verify")
+	viper.SetDefault("lyxazy.api_key", "")
 	viper.SetDefault("web.admin_path", "/admin")
 
 	// 环境变量支持

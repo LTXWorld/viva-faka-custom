@@ -494,6 +494,9 @@ func SetupRouter(cfg *config.Config, c *provider.Container) *gin.Engine {
 				authorized.POST("/procurement-orders/:id/retry", adminHandler.RetryProcurementOrder)
 				authorized.POST("/procurement-orders/:id/cancel", adminHandler.CancelProcurementOrder)
 
+				// 兑换/直充记录
+				authorized.GET("/recharge-jobs", adminHandler.GetRechargeJobs)
+
 				// 对账管理
 				paymentProtected.POST("/reconciliation/run", adminHandler.RunReconciliation)
 				paymentProtected.GET("/reconciliation/jobs", adminHandler.GetReconciliationJobs)

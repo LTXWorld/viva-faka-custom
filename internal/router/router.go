@@ -96,6 +96,7 @@ func SetupRouter(cfg *config.Config, c *provider.Container) *gin.Engine {
 			public.GET("/captcha/image", publicHandler.GetImageCaptcha)
 			public.POST("/affiliate/click", publicHandler.TrackAffiliateClick)
 			public.GET("/member-levels", publicHandler.GetPublicMemberLevels)
+			public.POST("/recharge/resolve", publicHandler.ResolveRechargeCard)
 			public.POST("/recharge/chatgpt-plus/submit", publicHandler.SubmitChatGPTPlusRecharge)
 			public.GET("/recharge/chatgpt-plus/by-card-key", publicHandler.QueryChatGPTPlusRechargeByCardKey)
 			public.POST("/recharge/gemini/balance", publicHandler.GetGeminiRechargeBalance)

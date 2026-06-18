@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/dujiao-next/internal/http/response"
+	"github.com/dujiao-next/internal/logger"
+	"github.com/dujiao-next/internal/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -78,6 +80,8 @@ func (h *Handler) SubmitChatGPTPlusRecharge(c *gin.Context) {
 		return
 	}
 
+	h.saveChatGPTPlusRechargeRecord(cardKey, data, true)
+
 	response.Success(c, data)
 }
 
@@ -103,7 +107,90 @@ func (h *Handler) QueryChatGPTPlusRechargeByCardKey(c *gin.Context) {
 		return
 	}
 
+	h.saveChatGPTPlusRechargeRecordsFromQuery(cardKey, data)
+
 	response.Success(c, data)
+}
+
+func (h *Handler) saveChatGPTPlusRechargeRecordsFromQuery(cardKey string, data map[string]interface{}) {
+	records, ok := data["records"].([]interface{})
+	if !ok || len(records) == 0 {
+		return
+	}
+	for _, item := range records {
+		if record, ok := item.(map[string]interface{}); ok {
+			if strings.TrimSpace(asString(record["card_key"])) == "" {
+				record["card_key"] = cardKey
+			}
+			h.saveChatGPTPlusRechargeRecord(cardKey, record, false)
+		}
+	}
+}
+
+func (h *Handler) saveChatGPTPlusRechargeRecord(cardKey string, data map[string]interface{}, submitted bool) {
+	if h == nil || h.RechargeJobRepo == nil || data == nil {
+		return
+	}
+	cardKey = strings.TrimSpace(cardKey)
+	if cardKey == "" {
+		cardKey = strings.TrimSpace(asString(data["card_key"]))
+	}
+	if cardKey == "" {
+		return
+	}
+
+	status := strings.TrimSpace(asString(data["status"]))
+	if status == "" {
+		status = models.RechargeStatusSubmitted
+	}
+	now := time.Now().UTC()
+	var submittedAt *time.Time
+	if submitted {
+		submittedAt = &now
+	}
+	var finishedAt *time.Time
+	if isRechargeTerminalStatus(status) {
+		finishedAt = &now
+	}
+
+	job := &models.RechargeJob{
+		Provider:        models.RechargeProviderLyxazy,
+		ProductType:     models.RechargeProductChatGPTPlus,
+		CardKey:         cardKey,
+		UpstreamJobID:   strings.TrimSpace(asString(data["job_id"])),
+		Status:          status,
+		Message:         strings.TrimSpace(asString(data["message"])),
+		ActivationEmail: strings.TrimSpace(asString(data["activation_email"])),
+		PlanName:        strings.TrimSpace(asString(data["plan_name"])),
+		RawResponseJSON: models.JSON(data),
+		SubmittedAt:     submittedAt,
+		FinishedAt:      finishedAt,
+	}
+	if err := h.RechargeJobRepo.UpsertByCardKey(job); err != nil {
+		logger.Warnw("recharge_job_save_failed", "provider", models.RechargeProviderLyxazy, "product_type", models.RechargeProductChatGPTPlus, "error", err)
+	}
+}
+
+func isRechargeTerminalStatus(status string) bool {
+	switch strings.TrimSpace(status) {
+	case models.RechargeStatusSuccess, models.RechargeStatusFailed, models.RechargeStatusCancelled:
+		return true
+	default:
+		return false
+	}
+}
+
+func asString(v interface{}) string {
+	switch t := v.(type) {
+	case string:
+		return t
+	case fmt.Stringer:
+		return t.String()
+	case nil:
+		return ""
+	default:
+		return fmt.Sprintf("%v", t)
+	}
 }
 
 func (h *Handler) lyxazyBaseURL() string {

@@ -148,6 +148,7 @@ func AutoMigrate() error {
 		&ReconciliationJob{},
 		&ReconciliationItem{},
 		&ChannelClient{},
+		&RechargeJob{},
 		&TelegramBroadcast{},
 		&MemberLevel{},
 		&MemberLevelPrice{},

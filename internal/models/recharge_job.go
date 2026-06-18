@@ -8,7 +8,9 @@ import (
 
 const (
 	RechargeProviderLyxazy     = "lyxazy"
+	RechargeProviderAidone     = "aidone"
 	RechargeProductChatGPTPlus = "chatgpt_plus"
+	RechargeProductGemini      = "gemini"
 	RechargeStatusSubmitted    = "submitted"
 	RechargeStatusQueued       = "queued"
 	RechargeStatusRunning      = "running"

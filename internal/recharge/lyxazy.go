@@ -55,6 +55,18 @@ func (p *LyxazyProvider) QueryChatGPTPlusByCardKey(ctx context.Context, cardKey 
 	return p.doJSON(ctx, http.MethodGet, path, nil)
 }
 
+func (p *LyxazyProvider) GetGeminiBalance(ctx context.Context, cdkey string) (map[string]interface{}, int, error) {
+	return nil, response.CodeBadRequest, errors.New("lyxazy provider does not support Gemini")
+}
+
+func (p *LyxazyProvider) SubmitGemini(ctx context.Context, input GeminiSubmitInput) (map[string]interface{}, int, error) {
+	return nil, response.CodeBadRequest, errors.New("lyxazy provider does not support Gemini")
+}
+
+func (p *LyxazyProvider) QueryGeminiStatus(ctx context.Context, cdkey string, taskID int64, email string) (map[string]interface{}, int, error) {
+	return nil, response.CodeBadRequest, errors.New("lyxazy provider does not support Gemini")
+}
+
 func (p *LyxazyProvider) doJSON(ctx context.Context, method, path string, payload interface{}) (map[string]interface{}, int, error) {
 	if p == nil || strings.TrimSpace(p.apiKey) == "" {
 		return nil, response.CodeInternal, errors.New("LYXAZY API Key 未配置")

@@ -98,6 +98,9 @@ func SetupRouter(cfg *config.Config, c *provider.Container) *gin.Engine {
 			public.GET("/member-levels", publicHandler.GetPublicMemberLevels)
 			public.POST("/recharge/chatgpt-plus/submit", publicHandler.SubmitChatGPTPlusRecharge)
 			public.GET("/recharge/chatgpt-plus/by-card-key", publicHandler.QueryChatGPTPlusRechargeByCardKey)
+			public.POST("/recharge/gemini/balance", publicHandler.GetGeminiRechargeBalance)
+			public.POST("/recharge/gemini/submit", publicHandler.SubmitGeminiRecharge)
+			public.POST("/recharge/gemini/status", publicHandler.QueryGeminiRechargeStatus)
 		}
 
 		// 游客接口

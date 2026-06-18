@@ -11,9 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dujiao-next/internal/constants"
 	"github.com/dujiao-next/internal/http/response"
 	"github.com/dujiao-next/internal/logger"
 	"github.com/dujiao-next/internal/models"
+
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -58,6 +61,14 @@ func (h *Handler) SubmitChatGPTPlusRecharge(c *gin.Context) {
 		response.Error(c, response.CodeBadRequest, "请输入卡密")
 		return
 	}
+	if err := h.ensureRechargeCardOwned(cardKey); err != nil {
+		response.Error(c, response.CodeForbidden, err.Error())
+		return
+	}
+	if existing := h.getExistingRechargeRecord(cardKey); existing != nil && strings.TrimSpace(existing.UpstreamJobID) != "" {
+		response.Success(c, rechargeJobToPublicMap(existing))
+		return
+	}
 
 	sessionData := req.SessionData
 	if sessionData == nil {
@@ -99,6 +110,10 @@ func (h *Handler) QueryChatGPTPlusRechargeByCardKey(c *gin.Context) {
 		response.Error(c, response.CodeBadRequest, "请输入卡密")
 		return
 	}
+	if err := h.ensureRechargeCardOwned(cardKey); err != nil {
+		response.Error(c, response.CodeForbidden, err.Error())
+		return
+	}
 
 	path := "/api/plus/jobs/by-card-key?card_key=" + url.QueryEscape(cardKey)
 	data, statusCode, err := h.lyxazyJSON(c, http.MethodGet, path, nil)
@@ -110,6 +125,66 @@ func (h *Handler) QueryChatGPTPlusRechargeByCardKey(c *gin.Context) {
 	h.saveChatGPTPlusRechargeRecordsFromQuery(cardKey, data)
 
 	response.Success(c, data)
+}
+
+func (h *Handler) ensureRechargeCardOwned(cardKey string) error {
+	if h == nil || h.CardSecretRepo == nil {
+		return fmt.Errorf("卡密校验服务不可用")
+	}
+	_, order, err := h.CardSecretRepo.FindSoldBySecret(cardKey)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("卡密不存在或尚未售出，请确认你输入的是在 Viva 小铺已付款订单中的卡密")
+		}
+		logger.Warnw("recharge_card_ownership_check_failed", "error", err)
+		return fmt.Errorf("卡密校验失败，请稍后重试")
+	}
+	if order == nil || !isPaidRechargeOrderStatus(order.Status) {
+		return fmt.Errorf("卡密关联订单未完成付款，暂不能兑换")
+	}
+	return nil
+}
+
+func isPaidRechargeOrderStatus(status string) bool {
+	switch strings.TrimSpace(status) {
+	case constants.OrderStatusPaid, constants.OrderStatusFulfilling, constants.OrderStatusPartiallyDelivered, constants.OrderStatusDelivered, constants.OrderStatusCompleted:
+		return true
+	default:
+		return false
+	}
+}
+
+func (h *Handler) getExistingRechargeRecord(cardKey string) *models.RechargeJob {
+	if h == nil || h.RechargeJobRepo == nil {
+		return nil
+	}
+	job, err := h.RechargeJobRepo.GetByCardKey(cardKey)
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			logger.Warnw("recharge_job_lookup_failed", "error", err)
+		}
+		return nil
+	}
+	return job
+}
+
+func rechargeJobToPublicMap(job *models.RechargeJob) map[string]interface{} {
+	if job == nil {
+		return map[string]interface{}{}
+	}
+	return map[string]interface{}{
+		"job_id":           job.UpstreamJobID,
+		"status":           job.Status,
+		"message":          job.Message,
+		"card_key":         job.CardKey,
+		"product_line":     "plus",
+		"activation_email": job.ActivationEmail,
+		"plan_name":        job.PlanName,
+		"duplicate":        true,
+		"local_record":     true,
+		"created_at":       job.CreatedAt.UnixMilli(),
+		"updated_at":       job.UpdatedAt.UnixMilli(),
+	}
 }
 
 func (h *Handler) saveChatGPTPlusRechargeRecordsFromQuery(cardKey string, data map[string]interface{}) {

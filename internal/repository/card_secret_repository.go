@@ -39,6 +39,7 @@ type CardSecretRepository interface {
 	ListIDsByBatchID(batchID uint) ([]uint, error)
 	CountByBatchIDs(batchIDs []uint) ([]CardSecretBatchStatusCount, error)
 	ListByOrderAndStatus(orderID uint, status string) ([]models.CardSecret, error)
+	FindSoldBySecret(secret string) (*models.CardSecret, *models.Order, error)
 	// ListAvailableByProduct 在事务中按 product_id + (可选)sku_id + status=available 列出
 	// 最多 limit 条卡密,按 id 升序。skuID=0 表示不限制 SKU。
 	ListAvailableByProduct(productID, skuID uint, limit int) ([]models.CardSecret, error)
@@ -191,6 +192,26 @@ func (r *GormCardSecretRepository) CountByBatchIDs(batchIDs []uint) ([]CardSecre
 		return nil, err
 	}
 	return rows, nil
+}
+
+// FindSoldBySecret 按卡密内容查找已售出的卡密及订单。
+func (r *GormCardSecretRepository) FindSoldBySecret(secret string) (*models.CardSecret, *models.Order, error) {
+	secret = strings.TrimSpace(secret)
+	if secret == "" {
+		return nil, nil, gorm.ErrRecordNotFound
+	}
+	var row models.CardSecret
+	if err := r.db.Where("secret = ? AND status = ? AND order_id IS NOT NULL", secret, models.CardSecretStatusUsed).First(&row).Error; err != nil {
+		return nil, nil, err
+	}
+	if row.OrderID == nil || *row.OrderID == 0 {
+		return &row, nil, nil
+	}
+	var order models.Order
+	if err := r.db.Where("id = ?", *row.OrderID).First(&order).Error; err != nil {
+		return &row, nil, err
+	}
+	return &row, &order, nil
 }
 
 // ListByOrderAndStatus 按订单与状态获取卡密

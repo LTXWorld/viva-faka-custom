@@ -201,7 +201,7 @@ func (r *GormCardSecretRepository) FindSoldBySecret(secret string) (*models.Card
 		return nil, nil, gorm.ErrRecordNotFound
 	}
 	var row models.CardSecret
-	if err := r.db.Where("secret = ? AND status = ? AND order_id IS NOT NULL", secret, models.CardSecretStatusUsed).First(&row).Error; err != nil {
+	if err := r.db.Preload("Batch").Where("secret = ? AND status = ? AND order_id IS NOT NULL", secret, models.CardSecretStatusUsed).First(&row).Error; err != nil {
 		return nil, nil, err
 	}
 	if row.OrderID == nil || *row.OrderID == 0 {

@@ -40,7 +40,12 @@ func (h *Handler) SubmitChatGPTPlusRecharge(c *gin.Context) {
 		response.Error(c, response.CodeBadRequest, "请输入卡密")
 		return
 	}
-	if err := h.ensureRechargeCardOwned(cardKey); err != nil {
+	batch, err := h.ensureRechargeCardOwned(cardKey)
+	if err != nil {
+		response.Error(c, response.CodeForbidden, err.Error())
+		return
+	}
+	if err := ensureBatchSupportsAPI(batch, models.RechargeProviderLyxazy, models.RechargeProductChatGPTPlus); err != nil {
 		response.Error(c, response.CodeForbidden, err.Error())
 		return
 	}
@@ -82,7 +87,12 @@ func (h *Handler) QueryChatGPTPlusRechargeByCardKey(c *gin.Context) {
 		response.Error(c, response.CodeBadRequest, "请输入卡密")
 		return
 	}
-	if err := h.ensureRechargeCardOwned(cardKey); err != nil {
+	batch, err := h.ensureRechargeCardOwned(cardKey)
+	if err != nil {
+		response.Error(c, response.CodeForbidden, err.Error())
+		return
+	}
+	if err := ensureBatchSupportsAPI(batch, models.RechargeProviderLyxazy, models.RechargeProductChatGPTPlus); err != nil {
 		response.Error(c, response.CodeForbidden, err.Error())
 		return
 	}
@@ -98,20 +108,49 @@ func (h *Handler) QueryChatGPTPlusRechargeByCardKey(c *gin.Context) {
 	response.Success(c, data)
 }
 
-func (h *Handler) ensureRechargeCardOwned(cardKey string) error {
+func (h *Handler) ensureRechargeCardOwned(cardKey string) (*models.CardSecretBatch, error) {
 	if h == nil || h.CardSecretRepo == nil {
-		return fmt.Errorf("卡密校验服务不可用")
+		return nil, fmt.Errorf("卡密校验服务不可用")
 	}
-	_, order, err := h.CardSecretRepo.FindSoldBySecret(cardKey)
+	secret, order, err := h.CardSecretRepo.FindSoldBySecret(cardKey)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("卡密不存在或尚未售出，请确认你输入的是在 Viva 小铺已付款订单中的卡密")
+			return nil, fmt.Errorf("卡密不存在或尚未售出，请确认你输入的是在 Viva 小铺已付款订单中的卡密")
 		}
 		logger.Warnw("recharge_card_ownership_check_failed", "error", err)
-		return fmt.Errorf("卡密校验失败，请稍后重试")
+		return nil, fmt.Errorf("卡密校验失败，请稍后重试")
 	}
 	if order == nil || !isPaidRechargeOrderStatus(order.Status) {
-		return fmt.Errorf("卡密关联订单未完成付款，暂不能兑换")
+		return nil, fmt.Errorf("卡密关联订单未完成付款，暂不能兑换")
+	}
+	if secret != nil {
+		return secret.Batch, nil
+	}
+	return nil, nil
+}
+
+func ensureBatchSupportsAPI(batch *models.CardSecretBatch, provider, productType string) error {
+	if batch == nil {
+		return nil
+	}
+	configuredProvider := strings.TrimSpace(batch.RechargeProvider)
+	configuredProduct := strings.TrimSpace(batch.RechargeProductType)
+	configuredMode := strings.TrimSpace(batch.RedeemMode)
+	// 兼容历史批次：未配置兑换来源时，仍按当前页面默认 Provider 处理。
+	if configuredProvider == "" && configuredProduct == "" && configuredMode == "" {
+		return nil
+	}
+	if configuredMode != "" && configuredMode != models.RedeemModeAPI {
+		if strings.TrimSpace(batch.RedeemURL) != "" {
+			return fmt.Errorf("该卡密需要前往外部地址兑换：%s", strings.TrimSpace(batch.RedeemURL))
+		}
+		return fmt.Errorf("该卡密不支持本站自动兑换，请联系商家处理")
+	}
+	if configuredProvider != "" && configuredProvider != provider {
+		return fmt.Errorf("该卡密供应商与当前兑换页面不匹配")
+	}
+	if configuredProduct != "" && configuredProduct != productType {
+		return fmt.Errorf("该卡密产品类型与当前兑换页面不匹配")
 	}
 	return nil
 }

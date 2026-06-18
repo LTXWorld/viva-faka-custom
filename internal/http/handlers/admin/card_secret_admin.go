@@ -16,12 +16,16 @@ import (
 
 // CreateCardSecretBatchRequest 批量录入卡密请求
 type CreateCardSecretBatchRequest struct {
-	ProductID   uint     `json:"product_id" binding:"required"`
-	SKUID       uint     `json:"sku_id"`
-	Secrets     []string `json:"secrets" binding:"required"`
-	BatchNo     string   `json:"batch_no"`
-	Note        string   `json:"note"`
-	Deduplicate *bool    `json:"deduplicate"`
+	ProductID           uint     `json:"product_id" binding:"required"`
+	SKUID               uint     `json:"sku_id"`
+	Secrets             []string `json:"secrets" binding:"required"`
+	BatchNo             string   `json:"batch_no"`
+	Note                string   `json:"note"`
+	Deduplicate         *bool    `json:"deduplicate"`
+	RechargeProvider    string   `json:"recharge_provider"`
+	RechargeProductType string   `json:"recharge_product_type"`
+	RedeemMode          string   `json:"redeem_mode"`
+	RedeemURL           string   `json:"redeem_url"`
 }
 
 // UpdateCardSecretRequest 更新卡密请求
@@ -100,14 +104,18 @@ func (h *Handler) CreateCardSecretBatch(c *gin.Context) {
 	}
 
 	batch, created, err := h.CardSecretService.CreateCardSecretBatch(service.CreateCardSecretBatchInput{
-		ProductID:   req.ProductID,
-		SKUID:       req.SKUID,
-		Secrets:     req.Secrets,
-		BatchNo:     req.BatchNo,
-		Note:        req.Note,
-		Source:      constants.CardSecretSourceManual,
-		AdminID:     adminID,
-		Deduplicate: req.Deduplicate,
+		ProductID:           req.ProductID,
+		SKUID:               req.SKUID,
+		Secrets:             req.Secrets,
+		BatchNo:             req.BatchNo,
+		Note:                req.Note,
+		Source:              constants.CardSecretSourceManual,
+		AdminID:             adminID,
+		Deduplicate:         req.Deduplicate,
+		RechargeProvider:    req.RechargeProvider,
+		RechargeProductType: req.RechargeProductType,
+		RedeemMode:          req.RedeemMode,
+		RedeemURL:           req.RedeemURL,
 	})
 	if err != nil {
 		switch {
@@ -159,6 +167,10 @@ func (h *Handler) ImportCardSecretCSV(c *gin.Context) {
 	}
 	batchNo := strings.TrimSpace(c.PostForm("batch_no"))
 	note := strings.TrimSpace(c.PostForm("note"))
+	rechargeProvider := strings.TrimSpace(c.PostForm("recharge_provider"))
+	rechargeProductType := strings.TrimSpace(c.PostForm("recharge_product_type"))
+	redeemMode := strings.TrimSpace(c.PostForm("redeem_mode"))
+	redeemURL := strings.TrimSpace(c.PostForm("redeem_url"))
 	deduplicate, err := shared.ParseOptionalBoolValue(c.PostForm("deduplicate"))
 	if err != nil {
 		shared.RespondError(c, response.CodeBadRequest, "error.card_secret_invalid", nil)
@@ -166,13 +178,17 @@ func (h *Handler) ImportCardSecretCSV(c *gin.Context) {
 	}
 
 	batch, created, err := h.CardSecretService.ImportCardSecretCSV(service.ImportCardSecretCSVInput{
-		ProductID:   productID,
-		SKUID:       skuID,
-		File:        file,
-		BatchNo:     batchNo,
-		Note:        note,
-		AdminID:     adminID,
-		Deduplicate: deduplicate,
+		ProductID:           productID,
+		SKUID:               skuID,
+		File:                file,
+		BatchNo:             batchNo,
+		Note:                note,
+		AdminID:             adminID,
+		Deduplicate:         deduplicate,
+		RechargeProvider:    rechargeProvider,
+		RechargeProductType: rechargeProductType,
+		RedeemMode:          redeemMode,
+		RedeemURL:           redeemURL,
 	})
 	if err != nil {
 		switch {

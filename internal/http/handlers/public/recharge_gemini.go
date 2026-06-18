@@ -45,7 +45,12 @@ func (h *Handler) GetGeminiRechargeBalance(c *gin.Context) {
 		response.Error(c, response.CodeBadRequest, "请输入卡密")
 		return
 	}
-	if err := h.ensureRechargeCardOwned(cdkey); err != nil {
+	batch, err := h.ensureRechargeCardOwned(cdkey)
+	if err != nil {
+		response.Error(c, response.CodeForbidden, err.Error())
+		return
+	}
+	if err := ensureBatchSupportsAPI(batch, models.RechargeProviderAidone, models.RechargeProductGemini); err != nil {
 		response.Error(c, response.CodeForbidden, err.Error())
 		return
 	}
@@ -73,7 +78,12 @@ func (h *Handler) SubmitGeminiRecharge(c *gin.Context) {
 		response.Error(c, response.CodeBadRequest, "请输入 Google 邮箱")
 		return
 	}
-	if err := h.ensureRechargeCardOwned(cdkey); err != nil {
+	batch, err := h.ensureRechargeCardOwned(cdkey)
+	if err != nil {
+		response.Error(c, response.CodeForbidden, err.Error())
+		return
+	}
+	if err := ensureBatchSupportsAPI(batch, models.RechargeProviderAidone, models.RechargeProductGemini); err != nil {
 		response.Error(c, response.CodeForbidden, err.Error())
 		return
 	}
@@ -112,7 +122,12 @@ func (h *Handler) QueryGeminiRechargeStatus(c *gin.Context) {
 		response.Error(c, response.CodeBadRequest, "请输入 task_id 或邮箱")
 		return
 	}
-	if err := h.ensureRechargeCardOwned(cdkey); err != nil {
+	batch, err := h.ensureRechargeCardOwned(cdkey)
+	if err != nil {
+		response.Error(c, response.CodeForbidden, err.Error())
+		return
+	}
+	if err := ensureBatchSupportsAPI(batch, models.RechargeProviderAidone, models.RechargeProductGemini); err != nil {
 		response.Error(c, response.CodeForbidden, err.Error())
 		return
 	}

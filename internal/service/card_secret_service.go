@@ -39,14 +39,18 @@ func NewCardSecretService(secretRepo repository.CardSecretRepository, batchRepo 
 
 // CreateCardSecretBatchInput 批量录入卡密输入
 type CreateCardSecretBatchInput struct {
-	ProductID   uint
-	SKUID       uint
-	Secrets     []string
-	BatchNo     string
-	Note        string
-	Source      string
-	AdminID     uint
-	Deduplicate *bool
+	ProductID           uint
+	SKUID               uint
+	Secrets             []string
+	BatchNo             string
+	Note                string
+	Source              string
+	AdminID             uint
+	Deduplicate         *bool
+	RechargeProvider    string
+	RechargeProductType string
+	RedeemMode          string
+	RedeemURL           string
 }
 
 // CreateCardSecretBatch 批量录入卡密
@@ -89,14 +93,18 @@ func (s *CardSecretService) CreateCardSecretBatch(input CreateCardSecretBatchInp
 
 	now := time.Now()
 	batch := &models.CardSecretBatch{
-		ProductID:  input.ProductID,
-		SKUID:      sku.ID,
-		BatchNo:    batchNo,
-		Source:     source,
-		TotalCount: len(normalized),
-		Note:       strings.TrimSpace(input.Note),
-		CreatedAt:  now,
-		UpdatedAt:  now,
+		ProductID:           input.ProductID,
+		SKUID:               sku.ID,
+		BatchNo:             batchNo,
+		Source:              source,
+		TotalCount:          len(normalized),
+		Note:                strings.TrimSpace(input.Note),
+		RechargeProvider:    strings.TrimSpace(input.RechargeProvider),
+		RechargeProductType: strings.TrimSpace(input.RechargeProductType),
+		RedeemMode:          strings.TrimSpace(input.RedeemMode),
+		RedeemURL:           strings.TrimSpace(input.RedeemURL),
+		CreatedAt:           now,
+		UpdatedAt:           now,
 	}
 	if input.AdminID > 0 {
 		batch.CreatedBy = &input.AdminID
@@ -136,13 +144,17 @@ func (s *CardSecretService) CreateCardSecretBatch(input CreateCardSecretBatchInp
 
 // ImportCardSecretCSVInput 导入 CSV 输入
 type ImportCardSecretCSVInput struct {
-	ProductID   uint
-	SKUID       uint
-	File        *multipart.FileHeader
-	BatchNo     string
-	Note        string
-	AdminID     uint
-	Deduplicate *bool
+	ProductID           uint
+	SKUID               uint
+	File                *multipart.FileHeader
+	BatchNo             string
+	Note                string
+	AdminID             uint
+	Deduplicate         *bool
+	RechargeProvider    string
+	RechargeProductType string
+	RedeemMode          string
+	RedeemURL           string
 }
 
 // ImportCardSecretCSV 从 CSV 导入卡密
@@ -162,14 +174,18 @@ func (s *CardSecretService) ImportCardSecretCSV(input ImportCardSecretCSVInput) 
 		return nil, 0, ErrCardSecretImportFailed
 	}
 	return s.CreateCardSecretBatch(CreateCardSecretBatchInput{
-		ProductID:   input.ProductID,
-		SKUID:       input.SKUID,
-		Secrets:     secrets,
-		BatchNo:     input.BatchNo,
-		Note:        input.Note,
-		Source:      constants.CardSecretSourceCSV,
-		AdminID:     input.AdminID,
-		Deduplicate: input.Deduplicate,
+		ProductID:           input.ProductID,
+		SKUID:               input.SKUID,
+		Secrets:             secrets,
+		BatchNo:             input.BatchNo,
+		Note:                input.Note,
+		Source:              constants.CardSecretSourceCSV,
+		AdminID:             input.AdminID,
+		Deduplicate:         input.Deduplicate,
+		RechargeProvider:    input.RechargeProvider,
+		RechargeProductType: input.RechargeProductType,
+		RedeemMode:          input.RedeemMode,
+		RedeemURL:           input.RedeemURL,
 	})
 }
 

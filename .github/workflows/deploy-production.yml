@@ -141,8 +141,11 @@ jobs:
           test -x "$RELEASE" || chmod +x "$RELEASE"
           test -f "$CURRENT"
 
-          echo "[deploy] backup database/uploads/logs"
-          /usr/local/bin/faka-backup.sh || true
+          echo "[deploy] verify production backup command"
+          test -x /usr/local/bin/faka-backup.sh
+
+          echo "[deploy] backup database/config/uploads/logs"
+          /usr/local/bin/faka-backup.sh
 
           echo "[deploy] backup current binary: $BACKUP"
           cp -a "$CURRENT" "$BACKUP"

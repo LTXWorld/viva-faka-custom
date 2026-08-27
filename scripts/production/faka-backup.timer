@@ -1,0 +1,12 @@
+[Unit]
+Description=Daily Viva Faka production data backup
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 Asia/Shanghai
+Persistent=true
+RandomizedDelaySec=5m
+AccuracySec=1m
+Unit=faka-backup.service
+
+[Install]
+WantedBy=timers.target

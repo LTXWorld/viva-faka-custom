@@ -130,8 +130,12 @@ func (h *Handler) UserRegister(c *gin.Context) {
 		return
 	}
 
-	// Viva 定制：关闭注册邮箱验证码，允许邮箱 + 密码直接注册。
-	emailVerificationEnabled := false
+	// 邮箱验证由后台 registration_config.email_verification_enabled 控制。
+	emailVerificationEnabled, err := h.SettingService.GetEmailVerificationEnabled(true)
+	if err != nil {
+		shared.RespondError(c, response.CodeInternal, "error.register_failed", err)
+		return
+	}
 
 	user, token, expiresAt, err := h.UserAuthService.Register(req.Email, req.Password, req.Code, req.AgreementAccepted, emailVerificationEnabled)
 	if err != nil {

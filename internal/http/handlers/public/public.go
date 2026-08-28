@@ -180,12 +180,10 @@ func (h *Handler) GetConfig(c *gin.Context) {
 	smtpSetting, _ := h.SettingService.GetSMTPSetting(h.Config.Email)
 	data["smtp_enabled"] = smtpSetting.Enabled
 	registrationEnabled, _ := h.SettingService.GetRegistrationEnabled(true)
-	// Viva 定制：注册不再要求邮箱验证码，避免未配置 SMTP 时无法注册；
-	// 但保留验证码发送与密码重置能力，由 SMTP 配置决定实际是否可发送。
-	emailVerificationEnabled := false
+	emailVerificationEnabled, _ := h.SettingService.GetEmailVerificationEnabled(true)
 	data["registration_enabled"] = registrationEnabled
 	data["email_verification_enabled"] = emailVerificationEnabled
-	data["password_reset_enabled"] = true
+	data["password_reset_enabled"] = smtpSetting.Enabled
 	emailDomainPolicy, policyErr := h.SettingService.GetRegistrationEmailDomainPolicy()
 	if policyErr != nil {
 		shared.RespondError(c, response.CodeInternal, "error.config_fetch_failed", policyErr)

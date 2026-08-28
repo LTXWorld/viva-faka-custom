@@ -514,6 +514,30 @@ func TestGetOrderConfigFallsBackToConfigWhenMissing(t *testing.T) {
 	}
 }
 
+func TestGetEmailVerificationEnabledUsesDefaultAndStoredValue(t *testing.T) {
+	repo := newMockSettingRepo()
+	svc := NewSettingService(repo)
+
+	enabled, err := svc.GetEmailVerificationEnabled(true)
+	if err != nil {
+		t.Fatalf("get default email verification setting failed: %v", err)
+	}
+	if !enabled {
+		t.Fatal("email verification should use the true default when registration_config is missing")
+	}
+
+	repo.store[constants.SettingKeyRegistrationConfig] = map[string]interface{}{
+		constants.SettingFieldEmailVerificationEnabled: false,
+	}
+	enabled, err = svc.GetEmailVerificationEnabled(true)
+	if err != nil {
+		t.Fatalf("get stored email verification setting failed: %v", err)
+	}
+	if enabled {
+		t.Fatal("stored email_verification_enabled=false should override the default")
+	}
+}
+
 func TestRegistrationSettingNormalizesEmailDomainAllowlist(t *testing.T) {
 	repo := newMockSettingRepo()
 	svc := NewSettingService(repo)

@@ -52,9 +52,9 @@ new-api / CPA：属于独立运维链路
 线上二进制：/srv/faka/app/dujiao-server
 监听：宿主机 8080
 反代：Docker imagecreate-caddy-1 → host.docker.internal:8080
-部署时间：2026-06-18 19:53（Asia/Shanghai）
-线上嵌入版本：viva-626df0f9bce1a25619a395403117964af5a28ddb
-API/fullstack commit：626df0f9bce1a25619a395403117964af5a28ddb
+部署时间：2026-08-28 20:53（Asia/Shanghai）
+线上嵌入版本：viva-c6113ff1d153e5492399c1bda1cdac9ee967585f
+API/fullstack commit：c6113ff1d153e5492399c1bda1cdac9ee967585f
 user commit：5f2d22214740bae9aa4563600e5684aaddc8816e
 admin commit：1774ce305d2a950f44b1319d54fea6a85ca29be0
 ```
@@ -77,6 +77,22 @@ Gemini 兑换和直充
 卡密批次绑定供应商元数据
 订单交付页兑换按钮
 自动 Deploy Production
+邮箱注册验证开关恢复为读取 registration_config
+生产 SMTP 发信和密码重置邮件
+注册/重置发码内置图片 Captcha 防刷
+```
+
+当前生产邮件与注册配置：
+
+```text
+SMTP：已启用，mail.linux.do:465，SSL
+SMTP 凭据：只存生产 settings.smtp_config，禁止提交
+开放注册：开启
+邮箱验证：开启
+允许域名：gmail.com、qq.com、163.com
+Captcha provider：image
+Captcha scenes：register_send_code、reset_send_code
+订单状态邮件：关闭
 ```
 
 旧文档中的“仍运行官方 release”“游客字段提示仍依赖 site_config.scripts”“初期只手动部署”等描述均已失效。

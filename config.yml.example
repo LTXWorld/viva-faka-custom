@@ -143,16 +143,6 @@ order:
   payment_expire_minutes: 15
   max_refund_days: 30
 
-# Lyxazy ChatGPT Plus 直充 API 配置
-# 生产环境请在 /srv/faka/app/config.yml 或环境变量 LYXAZY_API_KEY 中配置真实 Key，禁止提交到仓库。
-lyxazy:
-  base_url: "https://www.lyxazy.top/verify"
-  api_key: ""
-
-# Aidone Gemini 直充 API 配置（使用用户输入的 cdkey 作为鉴权/计费凭证）
-aidone:
-  base_url: "https://aidone.lol/openapi"
-
 # Web 路由配置（仅在 fullstack 二进制模式下生效；普通 Docker 镜像部署忽略此段）
 web:
   # 后台访问路径前缀

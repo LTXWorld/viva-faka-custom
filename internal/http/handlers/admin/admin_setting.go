@@ -5,6 +5,7 @@ import (
 	"github.com/dujiao-next/internal/constants"
 	"github.com/dujiao-next/internal/http/handlers/shared"
 	"github.com/dujiao-next/internal/http/response"
+	"github.com/dujiao-next/internal/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -40,6 +41,12 @@ func (h *Handler) UpdateSettings(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		shared.RespondBindError(c, err)
 		return
+	}
+	if req.Key == constants.SettingKeySiteConfig {
+		if err := service.NormalizeSiteConfig(req.Value); err != nil {
+			response.Error(c, response.CodeBadRequest, err.Error())
+			return
+		}
 	}
 
 	value, err := h.SettingService.Update(req.Key, req.Value)

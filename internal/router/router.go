@@ -96,12 +96,6 @@ func SetupRouter(cfg *config.Config, c *provider.Container) *gin.Engine {
 			public.GET("/captcha/image", publicHandler.GetImageCaptcha)
 			public.POST("/affiliate/click", publicHandler.TrackAffiliateClick)
 			public.GET("/member-levels", publicHandler.GetPublicMemberLevels)
-			public.POST("/recharge/resolve", publicHandler.ResolveRechargeCard)
-			public.POST("/recharge/chatgpt-plus/submit", publicHandler.SubmitChatGPTPlusRecharge)
-			public.GET("/recharge/chatgpt-plus/by-card-key", publicHandler.QueryChatGPTPlusRechargeByCardKey)
-			public.POST("/recharge/gemini/balance", publicHandler.GetGeminiRechargeBalance)
-			public.POST("/recharge/gemini/submit", publicHandler.SubmitGeminiRecharge)
-			public.POST("/recharge/gemini/status", publicHandler.QueryGeminiRechargeStatus)
 		}
 
 		// 游客接口
@@ -497,9 +491,6 @@ func SetupRouter(cfg *config.Config, c *provider.Container) *gin.Engine {
 				authorized.GET("/procurement-orders/:id/upstream-payload/download", adminHandler.DownloadProcurementUpstreamPayload)
 				authorized.POST("/procurement-orders/:id/retry", adminHandler.RetryProcurementOrder)
 				authorized.POST("/procurement-orders/:id/cancel", adminHandler.CancelProcurementOrder)
-
-				// 兑换/直充记录
-				authorized.GET("/recharge-jobs", adminHandler.GetRechargeJobs)
 
 				// 对账管理
 				paymentProtected.POST("/reconciliation/run", adminHandler.RunReconciliation)

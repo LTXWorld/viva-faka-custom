@@ -57,7 +57,6 @@ type Container struct {
 	ReconciliationJobRepo  repository.ReconciliationJobRepository
 	ReconciliationItemRepo repository.ReconciliationItemRepository
 	ChannelClientRepo      repository.ChannelClientRepository
-	RechargeJobRepo        repository.RechargeJobRepository
 	TelegramBroadcastRepo  repository.TelegramBroadcastRepository
 	MemberLevelRepo        repository.MemberLevelRepository
 	MemberLevelPriceRepo   repository.MemberLevelPriceRepository
@@ -203,7 +202,6 @@ func (c *Container) initRepositories() {
 	c.ReconciliationJobRepo = repository.NewReconciliationJobRepository(db)
 	c.ReconciliationItemRepo = repository.NewReconciliationItemRepository(db)
 	c.ChannelClientRepo = repository.NewChannelClientRepository(db)
-	c.RechargeJobRepo = repository.NewRechargeJobRepository(db)
 	c.TelegramBroadcastRepo = repository.NewTelegramBroadcastRepository(db)
 	c.MemberLevelRepo = repository.NewMemberLevelRepository(db)
 	c.MemberLevelPriceRepo = repository.NewMemberLevelPriceRepository(db)

@@ -420,6 +420,7 @@ const (
 	SettingKeyTelegramBotRuntimeStatus = "telegram_bot_runtime_status"
 	SettingKeyOrderEmailTemplateConfig = "order_email_template_config"
 	SettingFieldSiteCurrency           = "currency"
+	SettingFieldCardRedeemURL          = "card_redeem_url"
 	SettingFieldPaymentExpireMinutes   = "payment_expire_minutes"
 
 	SettingKeyNavConfig = "nav_config"

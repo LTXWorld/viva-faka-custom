@@ -30,6 +30,7 @@ func (h *Handler) GetSettings(c *gin.Context) {
 		return
 	}
 	if key == constants.SettingKeySiteConfig {
+		delete(value, constants.SettingFieldCardRedeemURL)
 		if _, exists := value[constants.SettingFieldCardRedeemRules]; !exists {
 			value[constants.SettingFieldCardRedeemRules] = service.DefaultCardRedeemRules()
 		}

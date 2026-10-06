@@ -106,7 +106,6 @@ func (h *Handler) GetConfig(c *gin.Context) {
 	defaults := map[string]interface{}{
 		"languages":                           append([]string(nil), constants.SupportedLocales...),
 		constants.SettingFieldSiteCurrency:    constants.SiteCurrencyDefault,
-		constants.SettingFieldCardRedeemURL:   "",
 		constants.SettingFieldCardRedeemRules: service.DefaultCardRedeemRules(),
 		"contact": map[string]interface{}{
 			"telegram": "https://t.me/dujiaoka",
@@ -117,6 +116,7 @@ func (h *Handler) GetConfig(c *gin.Context) {
 
 	var cached map[string]interface{}
 	if hit, err := cache.GetJSON(c.Request.Context(), publicConfigCacheKey, &cached); err == nil && hit {
+		delete(cached, constants.SettingFieldCardRedeemURL)
 		cached["server_time"] = time.Now().UnixMilli()
 		cached["app_version"] = version.Version
 		response.Success(c, cached)
@@ -128,6 +128,7 @@ func (h *Handler) GetConfig(c *gin.Context) {
 		shared.RespondError(c, response.CodeInternal, "error.config_fetch_failed", err)
 		return
 	}
+	delete(data, constants.SettingFieldCardRedeemURL)
 
 	publicChannels, err := h.PaymentService.GetAvailableChannels(service.AvailablePaymentChannelFilter{
 		PaymentType: constants.PaymentTypeOrder,

@@ -74,12 +74,16 @@ func TestNormalizeCardRedeemRules(t *testing.T) {
 
 func TestNormalizeSiteConfigCardRedeemRules(t *testing.T) {
 	config := map[string]interface{}{
+		constants.SettingFieldCardRedeemURL: "invalid retired URL",
 		constants.SettingFieldCardRedeemRules: []interface{}{
 			map[string]interface{}{"prefix": " A ", "url": " https://example.com/redeem "},
 		},
 	}
 	if err := NormalizeSiteConfig(config); err != nil {
 		t.Fatal(err)
+	}
+	if _, exists := config[constants.SettingFieldCardRedeemURL]; exists {
+		t.Fatal("legacy global URL must be removed without changing prefix rules")
 	}
 	rules := config[constants.SettingFieldCardRedeemRules].([]CardRedeemRule)
 	if len(rules) != 1 || rules[0].Prefix != "A" || rules[0].URL != "https://example.com/redeem" {
@@ -94,8 +98,8 @@ func TestNormalizeSiteConfig(t *testing.T) {
 	if err := NormalizeSiteConfig(config); err != nil {
 		t.Fatalf("NormalizeSiteConfig() error = %v", err)
 	}
-	if got := config[constants.SettingFieldCardRedeemURL]; got != "https://gptchongzhi.cc.cd/redeem" {
-		t.Fatalf("card_redeem_url = %#v", got)
+	if _, exists := config[constants.SettingFieldCardRedeemURL]; exists {
+		t.Fatal("legacy global URL must be removed")
 	}
 	if got := config[constants.SettingFieldCardRedeemRules].([]CardRedeemRule); len(got) != 2 || got[0].Prefix != "BBL" || got[1].Prefix != "PLUS" {
 		t.Fatalf("missing rules should preserve existing providers: %#v", got)

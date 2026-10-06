@@ -68,8 +68,7 @@ func NormalizeCardRedeemRules(raw interface{}) ([]CardRedeemRule, error) {
 	return rules, nil
 }
 
-// NormalizeCardRedeemURL validates the optional global card-redeem website URL.
-// Only absolute HTTPS URLs are published to the storefront navigation.
+// NormalizeCardRedeemURL validates a rule's redemption website URL.
 func NormalizeCardRedeemURL(raw interface{}) (string, error) {
 	if raw == nil {
 		return "", nil
@@ -100,11 +99,8 @@ func NormalizeSiteConfig(value map[string]interface{}) error {
 		return nil
 	}
 
-	cardRedeemURL, err := NormalizeCardRedeemURL(value[constants.SettingFieldCardRedeemURL])
-	if err != nil {
-		return err
-	}
-	value[constants.SettingFieldCardRedeemURL] = cardRedeemURL
+	// Retire the legacy global URL; redemption is exclusively prefix-based.
+	delete(value, constants.SettingFieldCardRedeemURL)
 	rawRules, exists := value[constants.SettingFieldCardRedeemRules]
 	if !exists {
 		rawRules = DefaultCardRedeemRules()

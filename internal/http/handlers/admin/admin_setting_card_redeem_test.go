@@ -39,6 +39,7 @@ func TestUpdateSettingsCardRedeemRules(t *testing.T) {
 			"value": map[string]interface{}{
 				"brand":                               map[string]interface{}{"site_name": "Viva"},
 				constants.SettingFieldCardRedeemRules: rules,
+				constants.SettingFieldCardRedeemURL:   "https://obsolete.example.com/",
 			},
 		})
 		require.NoError(t, err)
@@ -62,6 +63,11 @@ func TestUpdateSettingsCardRedeemRules(t *testing.T) {
 			} `json:"data"`
 		}
 		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &result))
+		var raw struct {
+			Data map[string]interface{} `json:"data"`
+		}
+		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &raw))
+		require.NotContains(t, raw.Data, constants.SettingFieldCardRedeemURL)
 		return result.Data.Rules
 	}
 
@@ -70,6 +76,16 @@ func TestUpdateSettingsCardRedeemRules(t *testing.T) {
 	_, err = svc.Update(constants.SettingKeySiteConfig, map[string]interface{}{"brand": map[string]interface{}{"site_name": "Viva"}})
 	require.NoError(t, err)
 	require.Equal(t, service.DefaultCardRedeemRules(), read())
+	existingRules := []service.CardRedeemRule{
+		{Prefix: "BBL", URL: "https://bblaiplus.com/"},
+		{Prefix: "ZERO", URL: "https://zero0ai.com/"},
+	}
+	_, err = svc.Update(constants.SettingKeySiteConfig, map[string]interface{}{
+		constants.SettingFieldCardRedeemURL:   "https://obsolete.example.com/",
+		constants.SettingFieldCardRedeemRules: existingRules,
+	})
+	require.NoError(t, err)
+	require.Equal(t, existingRules, read())
 	save([]service.CardRedeemRule{{Prefix: " A ", URL: " https://old.example.com/ "}}, 0)
 	require.Equal(t, []service.CardRedeemRule{{Prefix: "A", URL: "https://old.example.com/"}}, read())
 	save([]service.CardRedeemRule{{Prefix: "A", URL: "https://new.example.com/"}}, 0)
@@ -80,6 +96,7 @@ func TestUpdateSettingsCardRedeemRules(t *testing.T) {
 	config, err := svc.GetConfig(nil)
 	require.NoError(t, err)
 	require.Contains(t, config, constants.SettingFieldCardRedeemRules)
+	require.NotContains(t, config, constants.SettingFieldCardRedeemURL)
 	save([]service.CardRedeemRule{}, 0)
 	require.Empty(t, read())
 	require.NotNil(t, read())

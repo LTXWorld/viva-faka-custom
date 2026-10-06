@@ -421,6 +421,7 @@ const (
 	SettingKeyOrderEmailTemplateConfig = "order_email_template_config"
 	SettingFieldSiteCurrency           = "currency"
 	SettingFieldCardRedeemURL          = "card_redeem_url"
+	SettingFieldCardRedeemRules        = "card_redeem_rules"
 	SettingFieldPaymentExpireMinutes   = "payment_expire_minutes"
 
 	SettingKeyNavConfig = "nav_config"

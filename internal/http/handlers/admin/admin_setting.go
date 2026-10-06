@@ -22,8 +22,17 @@ func (h *Handler) GetSettings(c *gin.Context) {
 		return
 	}
 	if value == nil {
+		if key == constants.SettingKeySiteConfig {
+			response.Success(c, gin.H{constants.SettingFieldCardRedeemRules: service.DefaultCardRedeemRules()})
+			return
+		}
 		response.Success(c, gin.H{})
 		return
+	}
+	if key == constants.SettingKeySiteConfig {
+		if _, exists := value[constants.SettingFieldCardRedeemRules]; !exists {
+			value[constants.SettingFieldCardRedeemRules] = service.DefaultCardRedeemRules()
+		}
 	}
 
 	response.Success(c, value)
